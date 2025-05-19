@@ -1,0 +1,55 @@
+# Ambiente virtual
+.venv/
+venv/
+ENV/
+env/
+
+# Arquivos de log
+debug.log
+*.log
+logs/
+
+# Cache do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Cache do pip
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Configurações de editores
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Arquivos temporários do sistema
+.DS_Store
+Thumbs.db
+
+# Arquivos de ambiente
+.env
+.env.*
+
+# Build/distribuição
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Testes
+.coverage
+htmlcov/
+.tox/
+.nox/
+.pytest_cache/
+
+# Outros arquivos temporários
+*.bak
+*.swp
+*.tmp
+
+# Não versionar arquivos de exemplo de PDF de teste
+/tests/*.pdf
