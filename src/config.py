@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     mcp_server_url: str
     api_host: str = "0.0.0.0"
     api_port: int = 8001
+    api_token: str = "seu_token_secreto_aqui"  # Token de autenticação para a API
     
     # Configurações JWT - mantidas para evitar erro no middleware de sessões
     jwt_secret_key: str = "chave_secreta_temporaria_deve_ser_substituida"

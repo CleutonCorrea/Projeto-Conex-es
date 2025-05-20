@@ -12,6 +12,8 @@ import time
 
 # URL base da API
 API_BASE_URL = "http://localhost:8001"
+# Token de autenticação - em ambiente real, obtenha de forma segura
+API_TOKEN = "seu_token_aqui"  # Substitua pelo token gerado através do endpoint /admin/generate-token
 
 def extrair_texto_de_pdf(caminho_pdf):
     """Enviar um PDF para a API e extrair o texto e dados estruturados"""
@@ -34,10 +36,10 @@ def extrair_texto_de_pdf(caminho_pdf):
         # Iniciar cronômetro para medir o tempo total
         print(f"Enviando PDF para extração via API...")
         inicio = time.time()
-        
-        # Fazer a requisição POST
+          # Fazer a requisição POST com autenticação
         try:
-            resposta = requests.post(endpoint, files=arquivos)
+            headers = {"Authorization": f"Bearer {API_TOKEN}"}
+            resposta = requests.post(endpoint, files=arquivos, headers=headers)
         except requests.exceptions.RequestException as e:
             print(f"Erro ao conectar com a API: {e}")
             print("Verifique se o servidor está online na porta 8001")
@@ -95,6 +97,7 @@ def extrair_texto_de_pdf(caminho_pdf):
 def verificar_servidor():
     """Verifica se o servidor da API está online"""
     try:
+        # Rota /status não requer autenticação
         resposta = requests.get(f"{API_BASE_URL}/status", timeout=3)
         if resposta.status_code == 200:
             return True

@@ -5,8 +5,7 @@ from starlette.middleware.sessions import SessionMiddleware
 import datetime
 
 from src.api.routers.extraction_router import router as extraction_router
-from src.api.routers.redator_router   import router as redator_router
-from src.api.routers.avaliacao_router import router as avaliacao_router
+from src.api.routers.token_router     import router as token_router
 from src.config import load_settings
 
 app = FastAPI(title="Flagrantes")
@@ -25,8 +24,8 @@ settings = load_settings()
 
 # inclui routers
 app.include_router(extraction_router, prefix="", tags=["Extrações"])
-app.include_router(redator_router,   prefix="", tags=["Redator"])
-app.include_router(avaliacao_router, prefix="", tags=["Avaliação"])
+app.include_router(token_router,     prefix="/admin", tags=["Administração"])
+app.include_router(token_router,     prefix="", tags=["Tokens"])
 
 # Middleware para sessões - mantido para funcionalidade geral
 app.add_middleware(SessionMiddleware, secret_key=settings.jwt_secret_key)
@@ -36,19 +35,25 @@ app.title = "API de Análise de Textos Jurídicos"
 app.description = """
 API para extração e análise de textos jurídicos utilizando Inteligência Artificial.
 
+## Autenticação
+
+Todas as rotas requerem autenticação via token Bearer. Para acessar a API:
+
+1. Obtenha um token de acesso através do endpoint `/admin/generate-token` (requer credenciais de administrador)
+2. Inclua o token em todas as requisições no header: `Authorization: Bearer seu_token_aqui`
+
 ## Funcionalidades
 
 * `/extrair-dados` - Extrai dados de PDFs de documentos jurídicos
 * `/extrair-texto` - Processa texto diretamente fornecido (sem PDF)
-* `/gerar-documento` - Gera documentos jurídicos a partir de dados extraídos
-* `/avaliacao` - Registra avaliações de satisfação
+* `/admin/generate-token` - Gera um novo token de API (acesso administrativo)
 
-Esta API foi desenvolvida para permitir a integração com serviços externos e automatizar o processamento de documentos jurídicos.
+Esta API foi desenvolvida para permitir a integração com serviços externos e automatizar o processamento de documentos jurídicos de forma segura.
 """
 app.version = "1.0.0"
 
 # rota inicial simplificada 
-@app.get("/status")
+@app.get("/status", tags=["Sistema"])
 async def status():
     return {"status": "online", "timestamp": datetime.datetime.now().isoformat()}
 

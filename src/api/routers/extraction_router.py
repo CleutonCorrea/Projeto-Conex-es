@@ -1,10 +1,11 @@
 # src/api/routers/extraction_router.py
 
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from pydantic import BaseModel
 from fastmcp import Client
 from fastmcp.client.transports import SSETransport
 from src.config import load_settings
+from src.api.auth import verify_token
 
 import base64
 import json
@@ -23,7 +24,7 @@ class ExtracaoResponse(BaseModel):
     dados_estruturados: Dict[str, Any]
 
 @router.post("/extrair-dados", response_model=ExtracaoResponse)
-async def extrair_dados(arquivo: UploadFile = File(...)):
+async def extrair_dados(arquivo: UploadFile = File(...), authenticated: bool = Depends(verify_token)):
     try:
         session_id = str(uuid.uuid4())
         conteudo = await arquivo.read()
@@ -79,7 +80,7 @@ class TextoExtrair(BaseModel):
     texto: str
 
 @router.post("/extrair-texto", response_model=ExtracaoResponse)
-async def extrair_texto(payload: TextoExtrair):
+async def extrair_texto(payload: TextoExtrair, authenticated: bool = Depends(verify_token)):
     try:
         session_id = str(uuid.uuid4())
         texto_entrada = payload.texto
