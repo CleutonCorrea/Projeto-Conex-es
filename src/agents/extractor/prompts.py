@@ -31,9 +31,9 @@ Este método de raciocínio passo a passo garante que todas as decisões sejam d
 
 # **FORMATO DE SAÍDA EXIGIDO**
 
-O JSON deve conter obrigatoriamente os seguintes campos, respeitando os limites de caracteres e instruções de elaboração:
-
-```json
+O JSON deve conter obrigatoriamente os seguintes campos, respeitando os limites de caracteres e instruções de elaboração. Não inclua chaves ou colchetes adicionais.
+O JSON deve ser formatado corretamente, sem erros de sintaxe, e deve conter todos os campos obrigatórios:
+```
 {
   "nmProjeto": "...",
   "tpIniciativa": "...",

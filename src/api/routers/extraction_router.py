@@ -11,16 +11,19 @@ import json
 import traceback
 import uuid
 import time
-from typing import Optional, Dict, Any
+from typing import Dict, Any
+
+from src.utils.limpar_json import parse_json_safely
 
 router = APIRouter()
 
 # URL do servidor MCP
 settings = load_settings()
 MCP_SERVER_URL = settings.mcp_server_url
-
+versao = "0.1"
 class ExtracaoResponse(BaseModel):
     dados_estruturados: Dict[str, Any]
+    versao: str
 
 @router.post("/extrair-dados", response_model=ExtracaoResponse)
 async def extrair_dados(arquivo: UploadFile = File(...)):
@@ -61,14 +64,17 @@ async def extrair_dados(arquivo: UploadFile = File(...)):
             response_structured = await client.call_tool("extractor_structured_data_tool", {"texto": texto_extraido})
             t1_llm = time.perf_counter()
             tempo_llm_segundos = t1_llm - t0_llm
-            raw = response_structured[0].text.strip("`\n ")
+            raw = response_structured[0].text
             try:
-                dados_estruturados = json.loads(raw)
+                dados_estruturados = parse_json_safely(raw)
             except json.JSONDecodeError:
-                dados_estruturados = {"texto_raw": raw}            # Log de informações para debug
+                dados_estruturados = {"texto_raw": raw}
+            print(f"[INFO] Extração processada: {arquivo.filename}")
+            print(f"[INFO] Tempo PDF: {tempo_pdf_segundos:.2f}s, Tempo LLM: {tempo_llm_segundos:.2f}s")
 
         # Retorna JSON em vez de HTML
         return ExtracaoResponse(
+            versao=versao,
             dados_estruturados=dados_estruturados
         )
     except Exception as e:
@@ -106,12 +112,13 @@ async def extrair_texto(payload: TextoExtrair):
 
         t1_total = time.perf_counter()
         tempo_total = t1_total - t0_total        # Loga informações para debug
+        print(f"[INFO] Extração processada para texto direto (sem PDF)")
+        print(f"[INFO] Tempo LLM: {tempo_llm_segundos:.2f}s")
+
         # Retorna JSON
         return ExtracaoResponse(
-            session_id=session_id,
-            texto_extraido=texto_entrada,
             dados_estruturados=dados_estruturados,
-            tempo_processamento=tempo_total
+            versao=versao
         )
     except Exception as e:
         print("Erro completo:", traceback.format_exc())
