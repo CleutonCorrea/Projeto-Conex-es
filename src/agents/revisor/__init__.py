@@ -2,14 +2,11 @@ import datetime
 import json
 from typing import Dict, Any
 from fastmcp import FastMCP, Context
-from google.generativeai import configure, GenerativeModel
 from src.config import load_settings
 from .prompts import REVISOR_PROMPT
 from src.services.llm import gerar_resposta_llm  # Centraliza chamada à LLM
 
 settings = load_settings()
-configure(api_key=settings.gemini_api_key)
-llm = GenerativeModel(settings.gemini_model)
 
 # Troca o nome do agente para Revisor
 revisor_mcp = FastMCP(name="Revisor")

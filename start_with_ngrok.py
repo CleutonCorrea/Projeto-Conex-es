@@ -8,7 +8,9 @@ import sys
 import time
 from pyngrok import ngrok
 import asyncio
+from src.config import load_settings
 
+settings = load_settings()
 # Cria diretório de logs se não existir
 def ensure_log_dir():
     log_dir = Path("logs")
@@ -54,7 +56,7 @@ async def main():
         print("Configurando túnel Ngrok para a API (porta 8001)...")
         
         # Iniciar o túnel Ngrok
-        public_url = ngrok.connect(8001, "http")
+        public_url = ngrok.connect(str(settings.api_port), "http")
         print(f"\n🎉 API disponível externamente em: {public_url}")
         print("\nCompartilhe este URL com quem precisar acessar seu sistema.")
         print("Para fazer um POST para a rota de extração, use:")

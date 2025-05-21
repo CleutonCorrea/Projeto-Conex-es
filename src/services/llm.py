@@ -1,11 +1,50 @@
 # services/llm.py
-import google.generativeai as genai
+from google import genai
 from src.config import load_settings
 import re
-from typing import Dict, Union
+from typing import Dict, Union, Optional, Any
 import json
+from google.genai import types
 
 settings = load_settings()
+
+# Inicializa o client Gemini uma vez
+_gemini_client: genai.Client = genai.Client(api_key=settings.gemini_api_key)
+
+
+def get_gemini_client() -> genai.Client:
+    """Retorna o client já configurado para chamadas Gemini."""
+    return _gemini_client
+
+
+def build_generation_config(
+    model_id: Optional[str] = None,
+    temperature: float = 0.7,
+    max_output_tokens: Optional[int] = None,
+    system_instruction: Optional[str] = None,
+    response_mime_type: Optional[str] = None,
+    response_schema: Optional[Dict] = None,
+) -> tuple[str, types.GenerateContentConfig]:
+    """
+    Monta o par (model_id, GenerateContentConfig) para uso nas chamadas LLM.
+
+    Args:
+        model_id: ID do modelo (padrão em settings).
+        temperature: Controla aleatoriedade.
+        max_output_tokens: Tamanho máximo da resposta.
+        system_instruction: Instrução de sistema para o LLM.
+        response_mime_type: Tipo MIME da resposta (ex: 'application/json').
+        response_schema: Schema para respostas estruturadas.
+    """
+    config = types.GenerateContentConfig(
+        temperature=temperature,
+        max_output_tokens=max_output_tokens,
+        system_instruction=system_instruction,
+        response_mime_type=response_mime_type,
+    )
+    if response_schema:
+        config.response_schema = response_schema
+    return (model_id or settings.gemini_model, config)
 
 
 def parse_resposta_gemini(resposta: str) -> Union[Dict, str]:
@@ -49,30 +88,39 @@ def parse_resposta_gemini(resposta: str) -> Union[Dict, str]:
     return resposta
 
 
-def extrair_dados_estruturados(texto: str, prompt: str) -> dict:
+def extrair_dados_estruturados(texto: str, prompt: str) -> Union[Dict, str]:
     """
-    Usa o modelo Gemini para gerar uma resposta e converte para JSON estruturado via função utilitária.
+    Usa o modelo Gemini para gerar uma resposta e converte para JSON estruturado.
     """
-    genai.configure(api_key=settings.gemini_api_key)
-    model = genai.GenerativeModel(settings.gemini_model)
-
-    response = model.generate_content(f"{prompt}\n\nTexto:\n{texto}")
-    resposta = response.text
-
-    return parse_resposta_gemini(resposta)
+    client = get_gemini_client()
+    model_id, config = build_generation_config(
+        temperature=0.2
+    )
+    response = client.models.generate_content(
+        model=model_id,
+        contents=f"{prompt}\n\nTexto:\n{texto}",
+        config=config
+    )
+    # Garante que .text não seja None antes do parsing
+    return parse_resposta_gemini(response.text or "")
 
 
 async def gerar_resposta_llm(prompt: str) -> str:
     """
-    Função centralizada para enviar prompts à LLM (Gemini) e retornar a resposta como texto.
-    Pode ser expandida para logging, tratamento de exceções, etc.
+    Envia um prompt ao modelo Gemini e retorna a resposta de texto.
     """
-    model = genai.GenerativeModel(settings.gemini_model)
-    response = model.generate_content(prompt)
-    # Tenta acessar .text, senão pega o primeiro candidato
-    if hasattr(response, "text"):
-        return response.text.strip()
-    elif hasattr(response, "candidates") and response.candidates:
-        return response.candidates[0].content.strip()
-    else:
-        return str(response)
+    client = get_gemini_client()
+    model_id, config = build_generation_config(
+        system_instruction=None,
+        max_output_tokens=None
+    )
+    response = client.models.generate_content(
+        model=model_id,
+        contents=prompt,
+        config=config
+    )
+    # Retorna o texto gerado ou fallback para string da resposta
+    text = getattr(response, 'text', None)
+    if text:
+        return text.strip()
+    return str(response)

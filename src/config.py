@@ -2,13 +2,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
 
 class Settings(BaseSettings):
-    fastmcp_server_host: str
-    fastmcp_server_port: int
-    log_level: str
-    db_url: str = "dummy://connection"  # Valor fictício já que não usaremos mais o banco de dados
-    gemini_api_key: str
-    gemini_model: str
-    mcp_server_url: str
+    fastmcp_server_host: str = "localhost"
+    fastmcp_server_port: int = 8000
+    log_level: str = "info"
+    gemini_api_key: str = "sua_chave_api_gemini"
+    gemini_model: str = "gemini-2.5-flash-preview-04-17"
+    mcp_server_url: str = "http://localhost:8000"
     api_host: str = "0.0.0.0"
     api_port: int = 8001
     
